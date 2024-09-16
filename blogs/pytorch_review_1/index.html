@@ -8,15 +8,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <meta name="description" content="MathJax &#x3D; {         tex: {             inlineMath: [[&#39;$&#39;,&#39;$&#39;], [&#39;\\(&#39;,&#39;\\)&#39;]],             displayMath: [[&#39;$$&#39;,&#39;$$&#39;], [&#39;\\[&#39;,&#39;\\]&#39;]],             processEscapes: true,             process">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Code Review of PyTorch Runtime">
+<meta property="og:title" content="Overview of PyTorch Code Structure">
 <meta property="og:url" content="http://llmtraining-xtra.github.io/blogs/pytorch_review_1/index.html">
 <meta property="og:site_name" content="LLM-Training.Xtra">
 <meta property="og:description" content="MathJax &#x3D; {         tex: {             inlineMath: [[&#39;$&#39;,&#39;$&#39;], [&#39;\\(&#39;,&#39;\\)&#39;]],             displayMath: [[&#39;$$&#39;,&#39;$$&#39;], [&#39;\\[&#39;,&#39;\\]&#39;]],             processEscapes: true,             process">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://llmtraining-xtra.github.io/blogs/pytorch_review_1/pic/code_arch.png">
 <meta property="og:image" content="http://llmtraining-xtra.github.io/blogs/pytorch_review_1/pic/xxx.png">
-<meta property="article:published_time" content="2024-09-10T07:05:26.320Z">
-<meta property="article:modified_time" content="2024-09-10T07:05:26.320Z">
+<meta property="article:published_time" content="2024-09-12T12:09:00.812Z">
+<meta property="article:modified_time" content="2024-09-12T12:09:00.812Z">
 <meta property="article:author" content="Xtra">
 <meta property="article:tag" content="LLM">
 <meta property="article:tag" content="training">
@@ -43,7 +43,7 @@
         
     
     <!-- title -->
-    <title>Code Review of PyTorch Runtime</title>
+    <title>Overview of PyTorch Code Structure</title>
     <!-- styles -->
     
 <link rel="stylesheet" href="/css/style.css">
@@ -89,7 +89,7 @@
   <header>
     
     <h1 class="posttitle" itemprop="name headline">
-        Code Review of PyTorch Runtime
+        Overview of PyTorch Code Structure
     </h1>
 
 
@@ -173,7 +173,7 @@
 <div class="div_learning_post">
   <h3 class="title">Overview</h3>
   <p>
-  <imgref>code_arch</imgref> demonstrates the architecture of PyTorch codebase, and the relationship between code and runtime components. Below we introduce some important code block according to the hierarchy of runtime process.
+  <imgref>code_arch</imgref> demonstrates the architecture of PyTorch codebase, and the relationship between codes and corresponding runtime components. Below we introduce some important code block according to the hierarchy of runtime process.
 
   <div class="img" title="Code Structure v.s. Runtime of PyTorch" label="code_arch">
     <img src="./pic/code_arch.png" width="100%" />
@@ -185,14 +185,17 @@
   <p>
   However, the acutal execution logic of PyTorch isn't implemented at the frontend, instead it's implemented in a C++ library <code>libtorch.so</code> which is dynamically loaded to the process during the aboved <code>import torch</code> (③). The invokes of frontend python code eventually would be routed to a library function call in <code>libtorch.so</code>. This is achieve by <code>pybind</code>  <cite>pybind</cite> which is a python binding interface to C++ functions (②).
 
-<p>  $$\frac{1}{1}$$</p>
-  <div class="code_segment" label="forward">
-  <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">flexnet</span>(nn.Module):</span><br><span class="line">  <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
-  </div>
+  <p>
+  TODO: also the <code>c10</code>, <code>ATen</code>, <code>caffe2</code>
+
 
   <h3 class="title">Example</h3>
   <p>
-  &nbsp;&nbsp;&nbsp;&nbsp;
+  TODO: use <code>glu</code> as an example
+
+  <h3 class="title">Compilation System</h3>
+  <p>
+
 </div>
 
 

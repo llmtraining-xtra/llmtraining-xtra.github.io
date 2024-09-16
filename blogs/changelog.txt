@@ -1,0 +1,4 @@
+> changlog of the template from NeXT to cactus-white theme
+1. codeblock remove margin, modify in script/index.js:_load_code_segment
+2. codeblock fix calculation of number of rows, modify in script/index.js:_load_code_segment
+3. codeblock change parent node hierarchy, modify in script/index.js:_load_code_segment

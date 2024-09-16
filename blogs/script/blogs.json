@@ -1,1 +1,1 @@
-{"blogs":[{"title":"Code Review of PyTorch Runtime","path":"pytorch_review_1","tags":["PyTorch","Code Review"],"date":"Sept.9, 2024"}]}
+{"blogs":[{"title":"Overview of PyTorch Code Structure","path":"pytorch_review_1","tags":["PyTorch","Code Review"],"date":"Sept.10, 2024"},{"title":"Core Review of C10","path":"pytorch_review_2","tags":["PyTorch","Code Review"],"date":"Sept.11, 2024"}]}
