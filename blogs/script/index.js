@@ -3,7 +3,7 @@ async function __load_blogs() {
     let dest_table = document.getElementById("__dest__")
     dest_table_tbody = dest_table.children[0]
 
-    ____creeate_new_tr = (blog) => {
+    ____create_new_tr = (blog) => {
         let new_tr = document.createElement("tr");
         let new_td_title = document.createElement("td");
         let new_td_tag = document.createElement("td");
@@ -39,7 +39,8 @@ async function __load_blogs() {
         // console.log(blogs_json.blogs)
         for(let i=0; i<blogs_json.blogs.length; i++){
             let blog = blogs_json.blogs[i];
-            let new_tr = ____creeate_new_tr(blog)
+            if('_comment' in blog){ continue; }
+            let new_tr = ____create_new_tr(blog)
             dest_table_tbody.appendChild(new_tr)
         }
     })

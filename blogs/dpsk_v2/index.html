@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="MathJax &#x3D; {         tex: {             inlineMath: [[&#39;$&#39;,&#39;$&#39;], [&#39;\\(&#39;,&#39;\\)&#39;]],             displayMath: [[&#39;$$&#39;,&#39;$$&#39;], [&#39;\\[&#39;,&#39;\\]&#39;]],             processEscapes: true,             process">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DeepSeek-v2 - Multi-head Latent Attention">
+<meta property="og:url" content="http://llmtraining-xtra.github.io/blogs/dpsk_v2/index.html">
+<meta property="og:site_name" content="LLM-System.Xtra">
+<meta property="og:description" content="MathJax &#x3D; {         tex: {             inlineMath: [[&#39;$&#39;,&#39;$&#39;], [&#39;\\(&#39;,&#39;\\)&#39;]],             displayMath: [[&#39;$$&#39;,&#39;$$&#39;], [&#39;\\[&#39;,&#39;\\]&#39;]],             processEscapes: true,             process">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://llmtraining-xtra.github.io/blogs/dpsk_v2/pic/masked_mha_infer.png">
+<meta property="og:image" content="http://llmtraining-xtra.github.io/blogs/dpsk_v2/pic/masked_mla_infer.png">
+<meta property="og:image" content="http://llmtraining-xtra.github.io/blogs/dpsk_v2/pic/xxx.png">
+<meta property="article:published_time" content="2025-02-25T20:10:46.033Z">
+<meta property="article:modified_time" content="2025-02-25T20:10:46.033Z">
+<meta property="article:author" content="Xtra">
+<meta property="article:tag" content="LLM">
+<meta property="article:tag" content="Xtra">
+<meta property="article:tag" content="NUS">
+<meta property="article:tag" content="PyTorch">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://llmtraining-xtra.github.io/blogs/dpsk_v2/pic/masked_mha_infer.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>DeepSeek-v2 - Multi-head Latent Attention</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+    
+    <div class="content index width mx-auto px2 my4">
+        
+          <header id="header">
+  <a href="/">
+  
+    
+      <div id="logo" style="background-image: url(/images/llama.png);"></div>
+    
+  
+    <div id="title">
+      <h1>LLM-System.Xtra</h1>
+    </div>
+  </a>
+  <div id="nav">
+    <ul>
+      <li class="icon">
+        <a href="#"><i class="fa fa-bars fa-2x"></i></a>
+      </li>
+       
+        <li><a href="/">Home</a></li>
+       
+        <li><a href="/papers/">Awesome Paper List</a></li>
+       
+        <li><a href="/blogs/">Technical Blogs</a></li>
+      
+    </ul>
+  </div>
+</header>
+
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        DeepSeek-v2 - Multi-head Latent Attention
+    </h1>
+
+
+
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <head>
+<!--导入样式表-->
+<link rel="stylesheet" type="text/css" href="style/index.css">
+
+<!--导入网页脚本-->
+<script src="script/index.js"></script>
+
+<!--支持伪代码显示-->
+<script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$','$'], ['\\(','\\)']],
+            displayMath: [['$$','$$'], ['\\[','\\]']],
+            processEscapes: true,
+            processEnvironments: true,
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.0.0/es5/tex-chtml.js"
+        integrity="sha256-3Fdoa5wQb+JYfEmTpQHx9sc/GuwpfC/0R9EpBki+mf8=" crossorigin>
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.css">
+<script src="https://cdn.jsdelivr.net/npm/pseudocode@latest/build/pseudocode.min.js">
+</script>
+
+<!--支持网页公式显示-->    
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML-full"></script>
+
+<!--支持矩阵显示-->
+<script type="text/javascript">
+  run_maths = function() {
+    if (document.querySelector('[class*="cmath"]') !== null) {
+      if (typeof (mjax_path)=='undefined') { mjax_path='https://cdn.jsdelivr.net/npm/mathjax@2'; }
+      if (typeof (mjax_config)=='undefined') { mjax_config='AM_CHTML'; }
+      smjax = document.createElement ('script');
+      smjax.setAttribute('src',`${mjax_path}/MathJax.js?config=${mjax_config}`);
+      smjax.setAttribute('async',true);
+      document.getElementsByTagName('head')[0].appendChild(smjax);
+    }
+  };
+  if (document.readyState === 'loading') {  
+    window.addEventListener('DOMContentLoaded', run_maths); 
+  } else { 
+    run_maths(); 
+  }
+</script>
+</head>
+
+<body onload="load_page()">
+
+<!-- 导入 mermaid -->
+<script src="script/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+
+<!-- 导入 chart.js -->
+<script src="script/chart.min.js"></script>
+
+<!-- 本文的 Metadata -->
+<div id="metadata"></div>
+
+<!-- Start your post here -->
+<h2 class="title">Multi-head Latent Attention (MLA)</h2>
+<div class="div_learning_post">
+<h3 class="title">Motivation</h3>
+<h3 class="paragraph">TL;DR;</h3>
+<p>
+Reducing ① the memory overhead of key-value cache
+and ② activation memory during training.
+This post we mainly discuss on ①.
+
+<h3 class="paragraph">Recall MHA</h3>
+<p>
+<def><u>M</u>ulti-head <u>L</u>atent <u>A</u>ttention</def> (MLA) aims at compressing key-value cache generated during inference.
+Recall the attention head of Multi-Head Attention (MHA),
+let's look at the masked MHA layer in the decoder block
+(i.e., first MHA layer in the decoder block):
+
+<p>
+Firstly the decoder should calculate the query, key and value of current token,
+based on its hidden embedding $h_t$:
+<div class="equation" label="query">
+$q_t = W^Qh_t\,\,\,\,k_t = W^Kh_t\,\,\,\,v_t = W^Vh_t$
+</div>
+
+<p>And the output of the MHA block is calculated by:</p>
+<div class="equation" label="mha">
+$$
+u_t =
+  W^O \times 
+    \sum^{t}_{j=1} \left[
+      \underbrace{
+        \texttt{Softmax}(
+          \frac{
+            q_t^T
+            \times
+            k_j
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      }_{\texttt{Attention Score}}
+      \times
+      v_j
+    \right]
+$$
+</div>
+
+<p>
+where $n_h$ is the number of attention heads,
+$d_h$ is the dimension of query/key/value vectors within one attention head.
+
+<p>
+The key and value of tokens that before current token are stored in the KV-cache (i.e., $\{k_j, v_j | j \le t\}$),
+and the key and value of the current token would be appended to the KV-cache for calculation of subsequent tokens.
+Hence,
+the overall size of the KV-cache is shown in <equation>mha_kvc_size</equation>,
+where $n_{\text{decoder}}$ is the number of decoder block in the model,
+and $\mathcal{L}_{\text{output}}$ is the length of the output tokens.
+
+<div class="equation" label="mha_kvc_size">
+$2 \times n_{\text{decoder}} \times n_h \times d_h \times \mathcal{L}_{\text{output}}$
+</div>
+
+<h3 class="paragraph">Memory Overhead of KV-cache</h3>
+<p>
+Let's do some napkin math here.
+For DeepSeek-V2, which adopts $n_{\text{decoder}}=60$ and $n_h \times d_h=5120$.
+The size of KV-cache with different precision and context length is shown in <chartref>mha_kvc_size</chartref>:
+
+<div class="chartjs" label="mha_kvc_size"></div>
+
+<h3 class="title">MLA Process</h3>
+<h3 class="paragraph">Basic Idea</h3>
+<p>
+To address the explosion of KV-cache size with context length,
+The core of MLA is to compress the key $k_t$ and value $v_t$ of every decoded token
+into one single latent vector $c^{KV}_t$,
+which could save the memory overhead of KV-cache with a factor of $\frac{2d_h}{d_c}$.
+The decoder restores the original key $k_t$ and value $v_t$ from $c^{KV}_t$ during decoding.
+
+<p>
+Formally, $c^{KV}_t$, $k_t$ and $v_t$ are calculated by:
+
+<div class="equation" label="c_kv">
+$$
+c^{KV}_t = W^{DKV}h_t,
+\,\,\,\,
+k_t = W^{UK}c^{KV}_t,
+\,\,\,\,
+v_t = W^{UV}c^{KV}_t
+$$
+</div>
+
+<p>
+Combine <equation>c_kv</equation> and <equation>mha</equation>,
+one can see $W^{UK}$ and $W^{UV}$ could be absorbed into $W^Q$ and $W^O$ respectively,
+as shown in <equation>absorb</equation>:
+
+<div class="equation" label="absorb">
+$$
+\begin{aligned}
+u_t 
+  &= W^O
+    \sum^{t}_{j=1} \left[
+      \underbrace{
+        \texttt{Softmax}(
+          \frac{
+            \overbrace{[W^Qh_t]^T}^{\texttt{query}}
+            \overbrace{W^{UK}c^{KV}_t}^{\texttt{key}}
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      }_{\texttt{Attention Score}}
+      \overbrace{W^{UV}c^{KV}_t}^{\texttt{value}}
+    \right] \\ \\
+  &= W^O
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          h^T_t
+          \overbrace{[W^Q]^TW^{UK}}^{\texttt{merge}}
+          c^{KV}_t
+        }{
+          \sqrt{n_h d_h}
+        }
+      ) 
+      W^{UV}c^{KV}_t
+    \right] \\ \\
+  &= W^O
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          h^T_t
+          [W_{\text{merged}}^Q]^T
+          c^{KV}_t
+        }{
+          \sqrt{n_h d_h}
+        }
+      ) 
+      W^{UV}c^{KV}_t
+    \right] \\ \\
+  &= \underbrace{W^O W^{UV}}_{\texttt{merge}}
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          h^T_t
+          [W_{\text{merged}}^Q]^T
+          c^{KV}_t
+        }{
+          \sqrt{n_h d_h}
+        }
+      ) 
+      c^{KV}_t
+    \right] \\ \\
+  &= W^O_{\text{merged}}
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          h^T_t
+          [W_{\text{merged}}^Q]^T
+          c^{KV}_t
+        }{
+          \sqrt{n_h d_h}
+        }
+      ) 
+      c^{KV}_t
+    \right] \\ \\
+\end{aligned}
+$$
+</div>
+
+<h3 class="paragraph">Compatible with RoPE</h3>
+<p>
+However, our above calculation doesn't introduce
+<def><u>Ro</u>tary <u>P</u>osition <u>E</u>mbedding</def> (RoPE) into account,
+which would integrate position information into the query and key vector after projecting from token embedding.
+Let' see what happen if we directly combine latent key-value vectors with RoPE,
+as shown in <equation>mha_rope</equation>:
+
+<div class="equation" label="mha_rope">
+$$
+\begin{aligned}
+u_t &=
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \underbrace{
+        \texttt{Softmax}(
+          \frac{
+            [\texttt{RoPE}_t(q_t)]^T
+            \cdot
+            \texttt{RoPE}_j(k_j)
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      }_{\texttt{Attention Score}}
+      \cdot
+      v_j
+    \right] \\ \\
+&= 
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [R_t \cdot q_t]^T
+          \cdot
+          R_j \cdot k_j
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    v_j
+    \right] \\ \\
+&= 
+  W^O \cdot 
+    \sum^{t}_{j=1} \left[
+    \texttt{Softmax}(
+          \frac{
+            [R_tW^{Q}h_t]^T
+            \cdot
+            R_jW^{UK}c_t^{KV}
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      \cdot
+      W^{UV}c_t^{KV}
+    \right] \\ \\
+&= 
+  W^O \cdot 
+    \sum^{t}_{j=1} \left[
+    \texttt{Softmax}(
+          \frac{
+            h^T_t[W^{Q}]^TR^T_t
+            \cdot
+            R_jW^{UK}c_t^{KV}
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      \cdot
+      W^{UV}c_t^{KV}
+    \right] \\ \\
+&= 
+  W^O \cdot 
+    \sum^{t}_{j=1} \left[
+    \texttt{Softmax}(
+          \frac{
+            h^T_t
+            \overbrace{[W^{Q}]^TR_{t-j}W^{UK}}^{\texttt{can't merge}}
+            c_t^{KV}
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      \cdot
+      W^{UV}c_t^{KV}
+    \right] \\ \\
+\end{aligned}
+$$
+</div>
+
+<p>
+We can see that there's a position-sensitive rotation matrix $R_{t-j}$ sits between $W^{Q}$ and $W^{UK}$,
+which causes the $W^{UK}$ can't be absorbed into $W^{Q}$.
+If we let it go,
+this would force us to recalcuate the key of every previous token before the current generated token,
+which causes tremendous calculation overhead.
+
+<div class="comblock" title="Calculation Process of RoPE">
+<h3 class="paragraph">TL;DR;</h3>
+<p>
+The calculation process of $\texttt{RoPE}$ on vector $q_t \in [1, d_h]$ is a matrix operation of
+<div class="equation" label="mha_rope_calc">
+$q_{\text{rotated}} = q \cdot R(m)$
+</div>
+<p>
+Below we infers the calculation process in details.
+<h3 class="paragraph">Rotate a Vector</h3>
+<p>
+Recall that $\texttt{RoPE}$ splits the processed vector $q_t$ into $\frac{q_t}{2}$ parts,
+each part represent a pair of complex numbers.
+For the $i^{\text{th}}$ pair, $\texttt{RoPE}$ construct a $2\times2$ rotation matrix $R_i(m)$,
+as shown in <equation>R_i</equation>.
+<div class="equation" label="R_i">
+$$
+R_i(m) =
+  \begin{bmatrix}
+    \cos(m \omega_i) & -\sin(m \omega_i) \\
+    \sin(m \omega_i) & \cos(m \omega_i)
+  \end{bmatrix}
+$$
+</div>
+<p>
+where $\omega_i = \frac{1}{10000^{\frac{i}{d_h}}}$, and $m$ is the position index.
+<p>
+Arrange all $R_i$ along the diagonal to form a $d_h\times d_h$ matrix $R(m)$,
+as shown in <equation>R</equation>.
+<div class="equation" label="R">
+$$
+R(m) =
+  \begin{bmatrix}
+    R_0(m) & 0 & \cdots & 0 \\
+    0 & R_1(m) & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & R_{\frac{d_h}{2}-1}(m) \\
+  \end{bmatrix}
+$$
+</div>
+<p>
+Suppose we are given the vector $q_t$ with $d_h=4$, i.e., $q_t = [q_0, q_1, q_2, q_3]$,
+the rotated vector $q_{\text{rotated}}$ is calculated by:
+<div class="equation" label="mha_rope_calc">
+$$
+\begin{aligned}
+q_{\text{rotated}} 
+  &= R(m) \cdot q_t \\ \\
+  &= 
+    \begin{bmatrix}
+      R_0(m) & 0\\
+      0 & R_1(m)\\
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+      q_0 \\ q_1 \\ q_2 \\ q_3
+    \end{bmatrix} \\ \\
+  &= 
+    \begin{bmatrix}
+      sin(m \omega_0) & -cos(m \omega_0) & 0 & 0 \\
+      sin(m \omega_0) & -cos(m \omega_0) & 0 & 0 \\
+      0 & 0 & sin(m \omega_1) & -cos(m \omega_1) \\
+      0 & 0 & sin(m \omega_1) & -cos(m \omega_1) \\
+    \end{bmatrix}
+    \cdot
+    \begin{bmatrix}
+      q_0 \\ q_1 \\ q_2 \\ q_3
+    \end{bmatrix} \\ \\
+  &=
+    \begin{bmatrix}
+      q_0 \cos(m \omega_0) - q_1 \sin(m \omega_0) \\
+      q_0 \sin(m \omega_0) + q_1 \cos(m \omega_0) \\
+      q_2 \cos(m \omega_1) - q_3 \sin(m \omega_1) \\
+      q_2 \sin(m \omega_1) + q_3 \cos(m \omega_1) \\
+    \end{bmatrix} \\ \\
+\end{aligned}
+$$
+</div>
+<h3 class="paragraph">Calculated Relative Position</h3>
+<p>
+RoPE has a nice property that it can reflect the relative position of query and key,
+as shown in <equation>mha_rope_calc_relative</equation>.
+<div class="equation" label="mha_rope_calc_relative">
+$$
+\begin{aligned}
+q_{\text{rotated}}^T \cdot k_{\text{rotated}} &= [\texttt{RoPE}_t(q_t)]^T \cdot \texttt{RoPE}_j(k_j) \\ \\
+&= [R_t \cdot q_t]^T \cdot R_j \cdot k_j \\ \\
+&= q_t ^T\cdot R_t^T \cdot R_j \cdot k_j \\ \\
+&= q_t ^T\cdot R_{t-j} \cdot k_j \\ \\
+\end{aligned}
+$$
+</div>
+</div>
+
+<p>
+To address this issue,
+MLA adopts a simple way:
+<u>let only portion of the query/key vector to carray to position information</u>,
+i.e., don't rotate the entire query and key vector,
+and <u>cache the rotated portion of the key vector in the kv-cache</u>.
+
+<p>
+For the query vector, the detailed calculation is shown in <equation>decoupled_rope_q</equation>,
+where $W^{QR}$ is the matrix to project the latent query vector for conducting $\texttt{RoPE}$.
+
+<div class="equation", label="decoupled_rope_q">
+$$
+\begin{cases}
+  q^C_{t} &=& W^{UQ} \cdot c_t^Q \\ \\
+  q^R_{t} &=& \texttt{RoPE}_t(W^{QR} \cdot c_t^Q)
+\end{cases}
+$$
+</div>
+
+<p>
+For multiple attention heads,
+the query vector is splited into multiple parts evenly,
+as shown in <equation>decoupled_rope_q_i</equation>:
+
+<div class="equation", label="decoupled_rope_q_i">
+$q_{t} = [q_{t,1},\,q_{t,2},\,\cdots,\,q_{t,n_h}],\,\,\,\,q_{t,i} = [q^C_{t,i};\,q^R_{t,i}]$
+</div>
+
+<p>
+For the key vector, thing works basically the same,
+
+<div class="equation", label="decoupled_rope_k">
+$$
+\begin{cases}
+  k^C_{j} &=& W^{UK} \cdot \overbrace{c_j^{KV}}^{\texttt{cached}} \\ \\
+  k^R_{j} &=& \underbrace{\texttt{RoPE}_j(W^{KR} \cdot c_j^{KV})}_{\texttt{cached}}
+\end{cases}
+$$
+</div>
+
+<p>
+For multiple attention heads,
+one should note that the rotated portion of key vector is shared across all heads,
+as shown in <equation>decoupled_rope_q_i</equation>:
+
+<div class="equation", label="decoupled_rope_k_i">
+$k_{j} = [k_{j,1},\,k_{j,2},\,\cdots,\,k_{j,n_h}],\,\,\,\,k_{j,i} = [k^C_{j,i};\,\underbrace{k^R_{j}}_{\texttt{shared}}]$
+</div>
+
+<p>
+In this way, echo back to <equation>mha_rope</equation>,
+let infer the computation process of RoCE-capatible MLA,
+as shown in <equation>mla_rope</equation>:
+
+<div class="equation", label="mla_rope">
+$$
+\begin{aligned}
+u_{t,i} &=
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \underbrace{
+        \texttt{Softmax}(
+          \frac{
+            q_{t,i}^T
+            \cdot
+            k_{j,i}
+          }{
+            \sqrt{n_h d_h}
+          }
+        )
+      }_{\texttt{Attention Score}}
+      \cdot
+      v_{j,i}
+    \right] \\ \\
+&= 
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [q^C_{t,i};\,q^R_{t,i}]^T
+          \cdot
+          [k^C_{j,i};\,k^R_{t}]
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    W^{UV}c_j^{KV}
+    \right] \\ \\
+&= 
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [q^C_{t,i}]^T \cdot k^C_{j,i} + [q^R_{t,i}]^T \cdot k^R_{j}
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    W^{UV}c_j^{KV}
+    \right] \\ \\
+& \texttt{below we omit the attention head index}\,\,\,\,i \\ \\
+&= 
+  W^O \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [W^{UQ} W^{DQ} h_t]^T \cdot W^{UK}c_j^{KV} + [\texttt{RoPE}_t(W^{QR} \cdot W^{DQ} h_t)]^T \cdot k^R_{j}
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    W^{UV}c_j^{KV}
+    \right] \\ \\
+&= 
+  \overbrace{W^O W^{UV}}^{\texttt{merge}} \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [W^{DQ} h_t]^T \cdot \overbrace{[W^{UQ}]^T W^{UK}}^{\texttt{merge}} \cdot c_j^{KV}
+          + [\texttt{RoPE}_t(W^{QR} \cdot W^{DQ} h_t)]^T \cdot k^R_{j}
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    c_j^{KV}
+    \right] \\ \\
+&= 
+  W^O_{\texttt{merged}} \cdot
+    \sum^{t}_{j=1} \left[
+      \texttt{Softmax}(
+        \frac{
+          [W^{DQ} h_t]^T \cdot W^{Q}_{\texttt{merged}} \cdot c_j^{KV}
+          + [\texttt{RoPE}_t(W^{QR} \cdot W^{DQ} h_t)]^T \cdot k^R_{j}
+        }{
+          \sqrt{n_h d_h}
+        }
+      )
+    \cdot
+    c_j^{KV}
+    \right] \\ \\
+\end{aligned}
+$$
+</div>
+
+<p>
+<imgref>mla</imgref> illustrates the computation process of MLA.
+
+<h3 class="paragraph">Memory Overhead of KV-cache</h3>
+<p>
+Observing <equation>mla_rope</equation>,
+we can see that the vectors that MLA needs to cache is
+
+<ol>
+  <li>
+  <b>Rotated key portion</b> ${k_j^R,\,j\in[0,\mathcal{L}_{\text{output}}]}$
+  </li>
+  <li>
+  <b>Latent kv-cache</b> ${c_j^{KV},\,j\in[0,\mathcal{L}_{\text{output}}]}$
+  </li>
+</ol>
+
+<p>
+Assuming the size of $k_j^R$ is $d^R_h$,
+and the size of $c_j^{KV}$ is $d_c$,
+then we can know that the overall cache size of MLA is
+
+<div class="equation", label="mla_rope_cache_size">
+$n_{\text{decoder}} \times (d_c + d^R_h) \times \mathcal{L}_{\text{output}}$
+</div>
+
+<p>
+For DeepSeek-V2, the default setting is $d^R_h = \frac{d_h}{2}$, $d_c = 4d_h$ and $n_h=128$, 
+so the compress factor of kv-cache compared to MHA is
+
+<div class="equation", label="mla_rope_compress_factor">
+$
+\frac{S_{\texttt{MHA}}}{S_{\texttt{MLA}}}
+= \frac{2 n_h d_h}{d_c + d^R_h}
+= \frac{2 n_h d_h}{\frac{9}{2} d_h}
+= \frac{4}{9} n_h
+\approx 56.9
+$
+</div>
+
+
+<h3 class="title">FlashMLA</h3>
+<p>
+
+</div>
+
+<h2 class="title">Illustrations of Model Architecture</h2>
+<div class="div_learning_post">
+
+<h3 class="title">MHA Decoder Block</h3>
+<div class="img" title="MHA Decoder Block" label="mha">
+  <img src="./pic/masked_mha_infer.png" width="80%" />
+</div>
+
+<h3 class="title">MLA Decoder Block</h3>
+<div class="img" title="MLA Decoder Block" label="mla">
+  <img src="./pic/masked_mla_infer.png" width="80%" />
+</div>
+
+</div>
+
+
+<div class="div_ref" id="ref_container"></div>
+
+</body>
+
+<!-- 代码块 -->
+<!-- <div class="code_segment" label="forward">
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* hello*/</span></span><br></pre></td></tr></table></figure>
+</div> -->
+
+<!-- 代码块引用 -->
+<!-- <coderef>forward</coderef> -->
+
+<!-- Comment -->
+<!-- <div class="comblock" title="xxx"> -->
+
+<!-- Chart Support -->
+<!-- Check https://www.runoob.com/chartjs/chartjs-tutorial.html -->
+<!-- <div class="chartjs" label="naive_impt_performance"></div> -->
+
+<!-- Note Support -->
+<!-- Check https://theme-next.js.org/docs/tag-plugins/note.html -->
+
+<!-- 圆圈数字 -->
+<!--
+⓪ ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳ ㉑ ㉒ ㉓ ㉔ ㉕ ㉖ ㉗ ㉘ ㉙ ㉚ ㉛ ㉜ ㉝ ㉞ ㉟ ㊱ ㊲ ㊳ ㊴ ㊵ ㊶ ㊷ ㊸ ㊹ ㊺ ㊻ ㊼ ㊽ ㊾ ㊿
+-->
+
+<!-- Flow Chart -->
+<!--
+Format see: https://mermaid-js.github.io/mermaid/#/flowchart
+-->
+<!-- <flowchart class="mermaid">
+ Mermaid Flow Chart Code
+</flowchart> -->
+
+<!-- Sign Block -->
+<!--
+<div class="noteblock">
+A NOTE
+</div>
+
+<div class="queblock">
+A QUESTION
+</div>
+-->
+
+<!--图片、引用-->
+<!-- 
+<div class="img" title="img title" label="img_label" source="url">
+  <img src="" height="" />
+</div>
+
+<imaging>img_label</imaging>
+-->
+
+<!--等式、引用-->
+<!-- 
+<div class="equation" label="equation_label">
+</div>
+
+<equation>equation_label</equation>
+-->
+
+<!--定理、引用、证明-->
+<!-- 
+<div class="theorm" label="theorm_label">
+</div>
+
+<theorm>theorm_label</theorm>
+
+<div class="theorm_prove">
+</div>
+-->
+
+<!--引用其它章节-->
+<!-- 
+<ref></ref> 
+-->
+
+<!--引用文献-->
+<!-- 
+<cite></cite> 
+-->
+
+<!--关键词-->
+<!-- 
+<def></def> 
+-->
+
+<!--醒目注意-->
+<!-- 
+<note></note> 
+-->
+
+<!--段落-->
+<!--
+<h3 class="paragraph">Paragraph Name</h3>
+-->
+
+<!--表格-->
+<!--
+<div class="table" title="Table Title" label="table_label">
+  <table border="1" align="center" bgcolor="#FFFFFF">
+    <tr>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+    </tr>
+    <tr>
+      <td>xxx</td>
+      <td>xxx</td>
+      <td>xxx</td>
+    </tr>
+  </table>
+</div>
+-->
+
+<!--矩阵公式-->
+<!--
+<div class="cmath" align="center">
+  `((1, 0),(1, 0))`
+</div><br>
+-->
+
+<!--伪代码-->
+<!--
+<pre id="quicksort" style="display:hidden;">
+  % This quicksort algorithm is extracted from Chapter 7, Introduction to Algorithms (3rd edition)
+  \begin{algorithm}
+  \caption{Quicksort}
+  \begin{algorithmic}
+  \PROCEDURE{Quicksort}{$A, p, r$}
+      % Add Here
+      
+      % 空行
+      % \STATE \texttt{\\}
+  \ENDPROCEDURE
+  \end{algorithmic}
+  \end{algorithm}
+</pre>
+<script>
+    pseudocode.renderElement(document.getElementById("quicksort"));
+</script>
+-->
+<!--
+Latex 伪代码格式见: https://github.com/SaswatPadhi/pseudocode.js
+-->
+
+<!--图片-->
+<!--
+<div align="center">
+  <img src="./pic/xxx.png" width=80%>
+</div>
+-->
+
+<!--正文-->
+<!--
+<p>
+&nbsp;&nbsp;&nbsp;&nbsp;公式：<span>`\overline{A}\overline{B}`</span>
+</p>
+-->
+  </div>
+</article>
+
+
+
+    </div>
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2025 Xtra
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/papers/">Awesome Paper List</a></li>
+         
+          <li><a href="/blogs/">Technical Blogs</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+
+<!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/main.js"></script>
+
+
+
+    <!-- Google Analytics -->
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+

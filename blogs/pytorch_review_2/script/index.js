@@ -117,14 +117,14 @@ async function _show_catalogue(){
         if(language === 'cn')
             button.innerHTML = '显示目录'
         else
-            button.innerHTML = 'Show Catalogue'
+            button.innerHTML = 'Show Outline'
         setTimeout(function() { div_catalogue.style.display = 'none'; }, 300);
     } else {
         div_catalogue.style.display = ''
         if(language === 'cn')
             button.innerHTML = '隐藏目录'
         else
-            button.innerHTML = 'Hide Catalogue'
+            button.innerHTML = 'Hide Outline'
         div_catalogue.setAttribute('class', 'div_catalogue')
     }
 }
@@ -188,7 +188,7 @@ async function _load_metadata(){
         if(language === 'cn')
             show_catalogue_button.innerHTML = '显示目录'
         else
-            show_catalogue_button.innerHTML = 'Show Catalogue'
+            show_catalogue_button.innerHTML = 'Show Outline'
         block_title_container.append(show_catalogue_button)
         // 标志
         let icon = document.createElement('img')
@@ -322,14 +322,14 @@ async function _show_comment(id){
         if(language === 'cn'){
             comment_button.innerHTML = `隐藏附录`
         } else {
-            comment_button.innerHTML = `Hide Comment`
+            comment_button.innerHTML = `Hide Appendix`
         }
     } else {
         comment_container.setAttribute('class', 'comblock_disappear')
         if(language === 'cn'){
             comment_button.innerHTML = `显示附录`
         } else {
-            comment_button.innerHTML = `Show Comment`
+            comment_button.innerHTML = `Show Appendix`
         }
         setTimeout(function() { comment_container.style.display = 'none'; }, 300);
     }
@@ -364,7 +364,7 @@ async function _load_comments(){
             if(language === 'cn'){
                 h5_title.innerHTML = `附录: ${comments[i].getAttribute("title")}`
             } else {
-                h5_title.innerHTML = `Comment: ${comments[i].getAttribute("title")}`
+                h5_title.innerHTML = `Appendix: ${comments[i].getAttribute("title")}`
             }
         } else {
             if(language === 'cn'){
@@ -383,7 +383,7 @@ async function _load_comments(){
         if(language === 'cn'){
             comment_btn.innerHTML = `显示附录`
         } else {
-            comment_btn.innerHTML = `Show Comment`
+            comment_btn.innerHTML = `Show Appendix`
         }
         bar_container.append(comment_btn)
     
